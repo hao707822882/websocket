@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<div id="message"></div>
+<script type="text/javascript">
+try{
+	var readyState=new Array("正在连接","已建立连接","正在关闭连接","已关闭连接");
+	var host="ws://127.0.0.1:8091/";
+	var webSocket=new WebSocket(host);
+	var message=document.getElementById("message");
+	message.innerHTML+="<p>Socket状态："+readyState[webSocket.readyState]+"</p>";
+	webSocket.onopen=function(){
+		message.innerHTML+="<p>Socket状态："+readyState[webSocket.readyState]+"</p>";
+	}
+	webSocket.onmessage=function(msg){
+		message.innerHTML+="<p>接收信息："+msg.data+"</p>";
+	}
+	webSocket.onclose=function(){
+		message.innerHTML+="<p>Socket状态："+readyState[webSocket.readyState]+"</p>";
+	}
+}catch(exception){
+	message.innerHTML+="<p>有错误发生</p>";
+}
+function sendMessage(){
+	var entry = document.getElementById("entry");
+	webSocket.send(entry.value);
+	entry.value = "";
+	return false;
+}
+</script>
+<div id="toolbar" style="display: block;"><form onsubmit="sendMessage()" action="#">
+<input style="width: 100%; padding: 1em; margin: 0; border: thin 1px #F00000;" tabindex="1" type="text" id="entry"></div>
+</form>
+</body>
+</html>

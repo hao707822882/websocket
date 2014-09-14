@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<style type="text/css">
+#contents {
+	margin: 0 20px;
+	width: 850px;
+}
+#message{
+	width: 600px;
+	float: left;
+	margin-bottom: 85px;
+	padding-bottom: 100px;
+}
+#user{
+	width: 200px;
+	position: fixed;
+	right: 20px;
+	top: 10px;
+	bottom: 150px;
+	border: solid red 1px;
+	overflow: auto;
+}
+#foot{
+	height:60px;
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	background: white;
+	padding-top: 10px;
+}
+#text {
+	width: 90%;
+	padding: 1em;
+	background: green;
+}
+.me{
+	color: red;
+}
+</style>
+</head>
+<body onload="connect()">
+<div id="contents">
+<div id="message"></div>
+<div id="user">
+<h3>用户列表</h3>
+	<div id="user_list">
+	</div>
+</div>
+<div id="foot">
+<form action="/" onsubmit="send(); return false;">
+<input id="text" type="text"></input><!--
+<input type="button" id="connect_id" onclick="connect();" value="建立连接" />
+<input type="button" id="send_id" onclick="send();" value="发送数据" />
+<input type="button" id="disconnect_id" onclick="disconnect();" value="断开连接" />--></form>
+</div>
+</div>
+<script type="text/javascript">
+var webSocket;
+var websocketme;
+function connect(){
+	try{
+		var readyState=new Array("正在连接","已建立连接","正在关闭连接","已关闭连接");
+		var host="ws://127.0.0.1:8091/";
+		webSocket=new WebSocket(host);
+		
+		logMessge("Socket状态："+readyState[webSocket.readyState]);
+		webSocket.onopen=function(){
+			logMessge("Socket状态："+readyState[webSocket.readyState]);
+		}
+		webSocket.onmessage=function(msg){
+			var json = JSON.parse(msg.data);
+			if(json.type == 3){//登录用户
+				adduser(json.message[0]);
+			}else if(json.type == 2){//用户列表
+				clearuser();
+				for(var i=0; i < json.message.length; i++){
+					adduser(json.message[i]);
+				}
+			}else if(json.type == 4){//用户退出
+				removeuser(json.message[0]);
+			}else if(json.type == 10){//自己
+				websocketme = json.message[0];
+			}
+			logMessge("接收信息："+msg.data);
+		}
+		webSocket.onclose=function(){
+			logMessge("Socket状态："+readyState[webSocket.readyState]);
+		}
+	}catch(exception){
+		logMessge("有错误发生");
+	}
+}
+
+function logMessge(message){
+	document.getElementById("message").innerHTML+="<p>" + message + "</p>";
+	window.scrollTo(0,document.body.scrollHeight)
+}
+
+function send(){
+	var text=document.getElementById("text").value;
+	var message=document.getElementById("message");
+	if(text==""){
+		logMessge("请输入一些文字");
+		window.scrollTo(0,document.body.scrollHeight);
+		return;
+	}
+	try{
+		webSocket.send(text);
+		logMessge("发送数据："+text);
+	}catch(exception){
+		logMessge("发送数据出错");
+	}
+	var tt = document.getElementById("text");
+	tt.value=""; tt.focus();
+	return false;
+}
+function disconnect(){
+	webSocket.close();
+}
+function adduser(name){
+	var id = getId(name);
+	document.getElementById("user_list").innerHTML+="<p id=\"" + id + "\" class=\"" + (websocketme == name ?"me":"") + "\">" + name + "</p>";
+}
+function clearuser(){
+	var id = getId(name);
+	document.getElementById("user_list").innerHTML="";
+}
+function removeuser(name){
+	var id = getId(name);
+	var udom = document.getElementById(id);
+	udom.parentElement.removeChild(udom);
+}
+function getId(name){
+	return "uid" +  escape(name).toUpperCase().split("%U").join("_");
+}
+</script>
+</body>
+</html>
